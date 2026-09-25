@@ -37,6 +37,7 @@ defmodule BreezeCharts.MixProject do
   defp deps do
     [
       {:breeze, "~> 0.5.3"},
+      {:file_system, "~> 1.1", only: :dev},
       {:ex_doc, "~> 0.34", only: :dev, runtime: false},
       {:breeze_doc_support,
        github: "Gazler/breeze",
