@@ -24,8 +24,7 @@ defmodule BreezeCharts.MixProject do
         before_closing_body_tag: &docs_body/1
       ],
       package: [
-        files:
-          ~w(lib .formatter.exs mix.exs README.md LICENCE.md examples storybook doc_support doc_src),
+        files: ~w(lib .formatter.exs mix.exs README.md LICENCE.md),
         licenses: ["MIT"],
         links: %{"GitHub" => @source_url}
       ]
