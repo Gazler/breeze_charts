@@ -1,7 +1,8 @@
 # Breeze.Charts
 
 Chart components for [Breeze](https://github.com/Gazler/breeze). Includes sparklines,
-Braille line charts, color heat maps, and grouped or stacked bar charts in either orientation.
+Braille line charts, proportional pie charts, color heat maps, and grouped or
+stacked bar charts in either orientation.
 
 ## Usage
 
@@ -88,6 +89,29 @@ For multi-stop scales, pass two or more colors instead of `low_color` and
 />
 ```
 
+Pie charts use a simpler list of named slices:
+
+```elixir
+pie_data = [
+  %{name: "Mocha Marvels", value: 32.9},
+  %{name: "Caramel Swirls", value: 24.4},
+  %{name: "PB Bliss", value: 19.0},
+  %{name: "Choco Chippers", value: 9.0},
+  %{name: "Mint Melts", value: 7.4},
+  %{name: "Berry Bursts", value: 7.2}
+]
+```
+
+```heex
+<.pie_chart data={@pie_data} width={52} height={14} />
+```
+
+Pie charts use eight Braille subpixels per terminal cell and combine foreground
+and background colors at slice boundaries. This keeps curved edges smooth while
+preserving the colors on both sides of a boundary. The legend moves below the
+chart when it cannot fit to the right; set `show_legend={false}` to devote the
+entire component area to the pie.
+
 Series colors cycle through the active theme’s primary, secondary, success,
 accent, warning, and error colors. Override them with `:color` using a theme
 color name, terminal color index, RGB tuple, or hex string:
@@ -118,7 +142,7 @@ mix run examples/charts.exs
 
 ## Storybook
 
-Browse the sparkline, line chart, bar chart, and heat-map examples:
+Browse the sparkline, line chart, bar chart, heat-map, and pie chart examples:
 
 ```sh
 mix breeze.storybook

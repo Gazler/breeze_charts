@@ -306,6 +306,59 @@ defmodule Breeze.Charts do
     """
   end
 
+  @doc """
+  Renders a proportional pie chart using eight Braille subpixels per terminal cell.
+
+  Each slice needs a single-line `:name` and a nonnegative numeric `:value`. An
+  optional `:color` accepts the same theme names, terminal indexes, RGB tuples,
+  and hex strings as line and bar series. Colors otherwise cycle through the
+  active theme palette.
+
+  The renderer accounts for terminal cells being approximately twice as tall as
+  they are wide. Solid slice interiors use background color while curved edges
+  and boundaries use Braille masks, allowing two adjacent slice colors in one
+  cell. The legend is placed to the right when it fits and below the chart at
+  smaller dimensions. Set `show_legend={false}` to use the full area for the pie.
+
+      data = [
+        %{name: "Mocha Marvels", value: 32.9},
+        %{name: "Caramel Swirls", value: 24.4},
+        %{name: "PB Bliss", value: 19.0}
+      ]
+
+      <.pie_chart data={data} width={50} height={14} />
+  """
+  attr :data, :list, required: true
+  attr :width, :integer, required: true
+  attr :height, :integer, default: 12
+  attr :show_legend, :boolean, default: true
+  attr :class, :string, default: nil
+  attr :style, :any, default: nil
+  attr :rest, :global
+
+  def pie_chart(assigns) do
+    assigns =
+      assign(assigns,
+        content:
+          Breeze.Charts.Pie.render(
+            assigns.data,
+            assigns.width,
+            assigns.height,
+            assigns.show_legend
+          )
+          |> resolve_colors(assigns),
+        class:
+          Breeze.Blocks.merge_class(
+            "w-#{assigns.width} h-#{assigns.height} overflow-hidden",
+            class_override(assigns)
+          )
+      )
+
+    ~H"""
+    <box class={@class} style={Breeze.Blocks.inline_style(assigns)} {@rest}>{@content}</box>
+    """
+  end
+
   defp sparkline_content([], _minimum, _maximum), do: ""
 
   defp sparkline_content(values, minimum, maximum) do
@@ -336,8 +389,21 @@ defmodule Breeze.Charts do
     theme = get_in(assigns, [:__breeze_caller_assigns__, :breeze, :__render_theme__])
 
     Enum.map(spans, fn span ->
-      color = Map.get(span.style, :foreground_color, :text)
-      style = Map.put(span.style, :foreground_color, Breeze.Theme.resolve_color(theme, color))
+      style =
+        Enum.reduce([:foreground_color, :background_color], span.style, fn key, style ->
+          case Map.fetch(style, key) do
+            {:ok, color} -> Map.put(style, key, Breeze.Theme.resolve_color(theme, color))
+            :error -> style
+          end
+        end)
+
+      style =
+        if Map.has_key?(style, :foreground_color) do
+          style
+        else
+          Map.put(style, :foreground_color, Breeze.Theme.resolve_color(theme, :text))
+        end
+
       %{span | style: style}
     end)
   end
