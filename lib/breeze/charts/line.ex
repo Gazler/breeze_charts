@@ -12,12 +12,17 @@ defmodule Breeze.Charts.Line do
 
     {xs, series} = Breeze.Charts.Data.prepare(data, series)
     categorical? = is_binary(List.first(xs))
+    display = bounds[:display] || "lines"
+
+    unless display in ["lines", "points"] do
+      raise ArgumentError, ~s(line chart display must be "lines" or "points")
+    end
 
     if categorical? and (bounds[:x_min] != nil or bounds[:x_max] != nil) do
       raise ArgumentError, "line chart x bounds require numeric x values"
     end
 
-    unless categorical? or xs == Enum.sort(xs) do
+    unless display == "points" or categorical? or xs == Enum.sort(xs) do
       raise ArgumentError, "line chart data must have nondecreasing x values"
     end
 
@@ -34,7 +39,7 @@ defmodule Breeze.Charts.Line do
 
     if plot_width > 0 and plot_height > 0 do
       domain = {xmin, xmax, ymin, ymax}
-      grid = draw(series, domain, plot_width * 2, plot_height * 4)
+      grid = draw(series, domain, plot_width * 2, plot_height * 4, display)
 
       rows =
         for row <- 0..(plot_height - 1) do
@@ -110,7 +115,7 @@ defmodule Breeze.Charts.Line do
     end
   end
 
-  defp draw(series, {xmin, xmax, ymin, ymax}, width, height) do
+  defp draw(series, {xmin, xmax, ymin, ymax}, width, height, display) do
     domain = {0, xmax - xmin, 0, ymax - ymin}
 
     Enum.reduce(series, %{}, fn %{points: points, color: color}, grid ->
@@ -124,22 +129,26 @@ defmodule Breeze.Charts.Line do
           end
         end)
 
-      points
-      |> Enum.chunk_every(2, 1, :discard)
-      |> Enum.reduce(grid, fn [a, b], acc ->
-        case clip(a, b, domain) do
-          nil ->
-            acc
+      if display == "lines" do
+        points
+        |> Enum.chunk_every(2, 1, :discard)
+        |> Enum.reduce(grid, fn [a, b], acc ->
+          case clip(a, b, domain) do
+            nil ->
+              acc
 
-          {a, b} ->
-            raster(
-              acc,
-              project(a, domain, width, height),
-              project(b, domain, width, height),
-              color
-            )
-        end
-      end)
+            {a, b} ->
+              raster(
+                acc,
+                project(a, domain, width, height),
+                project(b, domain, width, height),
+                color
+              )
+          end
+        end)
+      else
+        grid
+      end
     end)
   end
 

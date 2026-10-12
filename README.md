@@ -48,9 +48,14 @@ Assign these to your view, then render:
 
 ```heex
 <.line_chart data={@data} series={@series} width={50} height={12} min={0} />
+<.line_chart data={@samples} series={@series} width={50} height={12} display="points" />
 <.bar_chart data={@data} series={@series} width={50} height={12} />
 <.bar_chart data={@data} series={@series} width={50} mode="stacked" orientation="horizontal" />
 ```
+
+Set `display="points"` on a line chart to render a scatter plot using the same
+Braille canvas, numeric axes, bounds, series colors, and legend. Points are not
+connected, and numeric X values may be supplied in any order in this mode.
 
 Pie charts use a simpler list of named slices:
 

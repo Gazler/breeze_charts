@@ -40,6 +40,28 @@ defmodule Breeze.Charts.StorybookTest do
     refute fixed =~ ~r/240\s*│/u
   end
 
+  test "line chart story switches between connected lines and scatter points" do
+    session =
+      Breeze.Test.start!(Breeze.Storybook,
+        size: {80, 30},
+        start_opts: [
+          directory: Path.expand("../storybook", __DIR__),
+          file: "line_chart.story.exs"
+        ]
+      )
+
+    on_exit(fn -> Breeze.Test.stop(session) end)
+    lines = Breeze.Test.render_text!(session)
+    assert lines =~ "Preview: Chart (Line) / Lines"
+
+    assert {:noreply, "storybook-nav", true} =
+             Breeze.Test.event(session, "select_variant", %{value: "points"})
+
+    scatter = Breeze.Test.render_text!(session)
+    assert scatter =~ "Preview: Chart (Line) / Scatter"
+    assert scatter =~ "Individual observations"
+  end
+
   test "bar chart story switches the same series between grouped and stacked layouts" do
     session =
       Breeze.Test.start!(Breeze.Storybook,
