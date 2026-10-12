@@ -28,6 +28,43 @@ defmodule Breeze.Charts.LineChartTest do
     end)
   end
 
+  defp dot_count(spans) do
+    spans
+    |> dots()
+    |> Enum.map(fn span ->
+      [code] = String.to_charlist(span.text)
+      (code - 0x2800) |> Integer.digits(2) |> Enum.sum()
+    end)
+    |> Enum.sum()
+  end
+
+  test "points display renders observations without connecting them" do
+    samples = data([{0, 0}, {5, 10}, {10, 0}])
+    bounds = [x_min: 0, x_max: 10, min: 0, max: 10]
+    lines = Line.render(samples, @series, 30, 10, Keyword.put(bounds, :display, "lines"))
+    points = Line.render(samples, @series, 30, 10, Keyword.put(bounds, :display, "points"))
+
+    assert dot_count(points) == 3
+    assert dot_count(lines) > dot_count(points)
+    assert text(points) =~ "Latency"
+  end
+
+  test "points display accepts unordered numeric x values" do
+    samples = data([{8, 2}, {1, 7}, {5, 4}])
+
+    assert dot_count(Line.render(samples, @series, 24, 8, display: "points")) == 3
+
+    assert_raise ArgumentError, ~r/nondecreasing/, fn ->
+      Line.render(samples, @series, 24, 8, display: "lines")
+    end
+  end
+
+  test "rejects unknown display modes" do
+    assert_raise ArgumentError, ~r/display must be/, fn ->
+      Line.render(data([{0, 0}]), @series, 20, 8, display: "areas")
+    end
+  end
+
   test "clips crossing lines in data space instead of clamping endpoints" do
     bounds = [x_min: 0, x_max: 10, min: 0, max: 10]
     crossing = Line.render(data([{-10, -10}, {20, 20}]), @series, 20, 8, bounds)
