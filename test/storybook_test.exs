@@ -1,7 +1,7 @@
 defmodule Breeze.Charts.StorybookTest do
   use ExUnit.Case, async: true
 
-  for file <- ["line_chart.story.exs", "bar_chart.story.exs"] do
+  for file <- ["line_chart.story.exs", "bar_chart.story.exs", "heatmap.story.exs"] do
     Code.require_file(Path.expand("../storybook/#{file}", __DIR__))
   end
 
@@ -105,5 +105,17 @@ defmodule Breeze.Charts.StorybookTest do
     assert horizontal =~ ~r/Run A[^\n]+420/u
     assert horizontal =~ ~r/Run B[^\n]+610/u
     assert horizontal =~ ~r/Run C[^\n]+350/u
+  end
+
+  test "heat map story renders time and day labels" do
+    session = Breeze.Test.start!(Breeze.Charts.Storybook.Heatmap, size: {40, 18})
+    on_exit(fn -> Breeze.Test.stop(session) end)
+
+    output = Breeze.Test.render_text!(session)
+    assert output =~ "Midnight"
+    assert output =~ "Afternoon"
+    assert output =~ "J F M A M J J A S O N D"
+    assert output =~ "-5"
+    assert output =~ "25"
   end
 end

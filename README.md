@@ -1,7 +1,7 @@
 # Breeze.Charts
 
 Chart components for [Breeze](https://github.com/Gazler/breeze). Includes sparklines,
-Braille line charts, and grouped or stacked bar charts in either orientation.
+Braille line charts, color heat maps, and grouped or stacked bar charts in either orientation.
 
 ## Usage
 
@@ -56,6 +56,38 @@ Set `display="points"` on a line chart to render a scatter plot using the same
 Braille canvas, numeric axes, bounds, series colors, and legend. Points are not
 connected, and numeric X values may be supplied in any order in this mode.
 
+Heat maps render numeric matrices as color intensity. Two terminal columns are
+used for each value by default so cells appear approximately square:
+
+```heex
+<.heatmap
+  data={@request_counts}
+  row_labels={["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]}
+  column_labels={["00", "04", "08", "12", "16", "20"]}
+  low_color={:surface}
+  high_color={:primary}
+  min={0}
+  max={1000}
+/>
+```
+
+Rows must have equal lengths. Values may be numbers or `nil`; missing values are
+left transparent. Bounds are inferred when `min` and `max` are omitted.
+
+For multi-stop scales, pass two or more colors instead of `low_color` and
+`high_color`:
+
+```heex
+<.heatmap
+  data={@temperatures}
+  row_labels={@times}
+  column_labels={@months}
+  colors={["#2563EB", "#22C55E", "#FACC15", "#F97316", "#DC2626"]}
+  min={-5}
+  max={25}
+/>
+```
+
 Series colors cycle through the active theme’s primary, secondary, success,
 accent, warning, and error colors. Override them with `:color` using a theme
 color name, terminal color index, RGB tuple, or hex string:
@@ -86,7 +118,7 @@ mix run examples/charts.exs
 
 ## Storybook
 
-Browse the sparkline, line chart, and bar chart examples:
+Browse the sparkline, line chart, bar chart, and heat-map examples:
 
 ```sh
 mix breeze.storybook

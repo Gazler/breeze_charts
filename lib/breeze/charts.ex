@@ -222,6 +222,90 @@ defmodule Breeze.Charts do
     """
   end
 
+  @doc """
+  Renders a numeric matrix as a color heat map.
+
+  Each data row must have the same number of values. Numeric values are mapped
+  between `low_color` and `high_color`; `nil` values leave a transparent cell.
+  Supply `colors` with two or more entries for a multi-stop color scale.
+  Bounds are inferred unless `min` and `max` are supplied. Two terminal columns
+  are used per value by default so cells appear approximately square.
+
+      data = [
+        [12, 35, 80, 42],
+        [65, 20, 95, 51],
+        [44, 72, nil, 88]
+      ]
+
+      <.heatmap
+        data={data}
+        row_labels={["Mon", "Tue", "Wed"]}
+        column_labels={["00", "06", "12", "18"]}
+        min={0}
+        max={100}
+      />
+
+  Theme names, RGB tuples, and hex colors are accepted for the endpoints.
+  Indexed terminal colors fall back to a two-color scale because their RGB
+  values are not known.
+  """
+  attr :data, :list, required: true
+  attr :row_labels, :list, default: []
+  attr :column_labels, :list, default: []
+  attr :min, :any, default: nil
+  attr :max, :any, default: nil
+  attr :low_color, :any, default: :surface
+  attr :high_color, :any, default: :primary
+  attr :colors, :list, default: nil
+  attr :cell_width, :integer, default: 2
+  attr :show_scale, :boolean, default: true
+  attr :class, :string, default: nil
+  attr :style, :any, default: nil
+  attr :rest, :global
+
+  def heatmap(assigns) do
+    theme = get_in(assigns, [:__breeze_caller_assigns__, :breeze, :__render_theme__])
+    low_color = Breeze.Theme.resolve_color(theme, assigns.low_color)
+    high_color = Breeze.Theme.resolve_color(theme, assigns.high_color)
+
+    colors =
+      if assigns.colors do
+        Enum.map(assigns.colors, &Breeze.Theme.resolve_color(theme, &1))
+      else
+        [low_color, high_color]
+      end
+
+    content =
+      Breeze.Charts.Heatmap.render(assigns.data,
+        row_labels: assigns.row_labels,
+        column_labels: assigns.column_labels,
+        min: assigns.min,
+        max: assigns.max,
+        low_color: low_color,
+        high_color: high_color,
+        colors: colors,
+        cell_width: assigns.cell_width,
+        show_scale: assigns.show_scale
+      )
+      |> resolve_colors(assigns)
+
+    {width, height} = content_dimensions(content)
+
+    assigns =
+      assign(assigns,
+        content: content,
+        class:
+          Breeze.Blocks.merge_class(
+            "w-#{max(width, 1)} h-#{max(height, 1)} overflow-hidden",
+            class_override(assigns)
+          )
+      )
+
+    ~H"""
+    <box class={@class} style={Breeze.Blocks.inline_style(assigns)} {@rest}>{@content}</box>
+    """
+  end
+
   defp sparkline_content([], _minimum, _maximum), do: ""
 
   defp sparkline_content(values, minimum, maximum) do
@@ -264,5 +348,11 @@ defmodule Breeze.Charts do
       is_binary(assigns[:style]) -> assigns[:style]
       true -> nil
     end
+  end
+
+  defp content_dimensions(spans) do
+    rows = spans |> Enum.map_join(& &1.text) |> String.split("\n")
+    width = rows |> Enum.map(&BackBreeze.Utils.string_length/1) |> Enum.max(fn -> 0 end)
+    {width, length(rows)}
   end
 end
