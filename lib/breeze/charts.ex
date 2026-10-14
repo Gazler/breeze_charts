@@ -60,7 +60,7 @@ defmodule Breeze.Charts do
   end
 
   @doc """
-  Renders multiple series as a Braille line chart with shared axes and a legend.
+  Renders multiple series as a Braille line or scatter chart with shared axes and a legend.
 
   Uses the same `data` and `series` inputs as `bar_chart/1`. Each data row has
   `:x` and a `:values` map keyed by series. Each series has `:key`, `:name`, and
@@ -77,9 +77,11 @@ defmodule Breeze.Charts do
 
       series = [%{key: :input, name: "Input"}, %{key: :output, name: "Output"}]
 
-  Numeric X values must be nondecreasing. String X values are equally spaced
-  categories in data order. Don't mix numeric and string X values. Each row must
-  supply a numeric value for every selected series key. Extra keys are ignored.
+  Set `display="points"` for a scatter plot without connecting lines. Numeric X
+  values may appear in any order in points mode; line mode requires them to be
+  nondecreasing. String X values are equally spaced categories in data order.
+  Don't mix numeric and string X values. Each row must supply a numeric value for
+  every selected series key. Extra keys are ignored.
 
   `min` and `max` set fixed value bounds. `x_min` and `x_max` set fixed numeric X
   bounds, and aren't supported for string categories. Otherwise bounds are
@@ -92,6 +94,7 @@ defmodule Breeze.Charts do
   wherever Braille dots from multiple series share a cell.
 
       <.line_chart data={@data} series={@series} width={50} height={12} min={0} />
+      <.line_chart data={@samples} series={@series} width={50} height={12} display="points" />
   """
   attr :data, :list, required: true
   attr :series, :list, required: true
@@ -101,6 +104,7 @@ defmodule Breeze.Charts do
   attr :x_max, :any, default: nil
   attr :min, :any, default: nil
   attr :max, :any, default: nil
+  attr :display, :string, default: "lines", values: ["lines", "points"]
   attr :class, :string, default: nil
   attr :style, :any, default: nil
   attr :rest, :global
