@@ -1,7 +1,12 @@
 defmodule Breeze.Charts.StorybookTest do
   use ExUnit.Case, async: true
 
-  for file <- ["line_chart.story.exs", "bar_chart.story.exs", "heatmap.story.exs"] do
+  for file <- [
+        "line_chart.story.exs",
+        "bar_chart.story.exs",
+        "heatmap.story.exs",
+        "pie_chart.story.exs"
+      ] do
     Code.require_file(Path.expand("../storybook/#{file}", __DIR__))
   end
 
@@ -117,5 +122,16 @@ defmodule Breeze.Charts.StorybookTest do
     assert output =~ "J F M A M J J A S O N D"
     assert output =~ "-5"
     assert output =~ "25"
+  end
+
+  test "pie chart story renders slices and their percentage legend" do
+    session = Breeze.Test.start!(Breeze.Charts.Storybook.PieChart, size: {58, 18})
+    on_exit(fn -> Breeze.Test.stop(session) end)
+
+    output = Breeze.Test.render_text!(session)
+    assert output =~ "Desktop"
+    assert output =~ "48.0%"
+    assert output =~ "Mobile"
+    assert output =~ "31.0%"
   end
 end
